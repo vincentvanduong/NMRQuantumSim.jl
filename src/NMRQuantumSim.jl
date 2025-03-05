@@ -8,6 +8,7 @@ include("simulation/parameters.jl")
 include("simulation/operators.jl")
 include("simulation/hamiltonian.jl")
 include("simulation/evolution.jl")
+include("simulation/quantum_fourier_transform.jl")
 include("quantum/encoding.jl")
 include("quantum/circuits.jl")
 include("quantum/measurement.jl")
@@ -20,11 +21,12 @@ include("io/serialisation.jl")
 export NMRParameters, create_default_parameters
 export create_spin_operators
 export heisenberg_hamiltonian, compute_eigensystem, compute_eigensystem_sparse
+export compute_qft_array, construct_hamiltonian_from_nmr, compute_spectrum, visualise_parameter_space
 export compute_A_tensor_for_parameter, parallel_compute_A_tensors
 export NMRSystem, ParameterSubset, QuantumParameterEncoding
 export set_coupling!, get_coupling, set_chemical_shift!, get_chemical_shift
 export initialize_random_system, hamiltonian_parameters, update_from_parameters!
-export binary_to_system, system_to_binary, total_bits, parameter_index_map
+export binary_to_system, system_to_binary, total_bits, parameter_index_map, real_to_binary, binary_to_real
 export save_system, load_system, calculate_spectrum
 
 end # module

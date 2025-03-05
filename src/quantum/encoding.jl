@@ -120,7 +120,7 @@ function binary_to_system(binary_params::Integer, base_system::NMRSystem, encodi
         h[i] = h_value
     end
     
-    return NMRSystem(N, J, h, base_system.labels, copy(base_system.metadata))
+    return NMRSystem(N, J, h, base_system.labels)
 end
 
 """
@@ -206,4 +206,36 @@ function generate_all_parameter_configurations(base_system::NMRSystem, encoding:
     end
     
     return configurations
+end
+
+
+"""
+    binary_to_real(binary::Integer, bits::Int, min_val::Real, max_val::Real)
+
+Convert a binary integer to a real value within the specified range.
+"""
+function binary_to_real(binary::Integer, bits::Int, min_val::Real, max_val::Real)
+    # Calculate the number of discrete steps
+    steps = 2^bits - 1
+    
+    # Map from 0...steps to min_val...max_val
+    return min_val + (binary / steps) * (max_val - min_val)
+end
+
+"""
+    real_to_binary(value::Real, bits::Int, min_val::Real, max_val::Real)
+
+Convert a real value within the specified range to a binary integer.
+"""
+function real_to_binary(value::Real, bits::Int, min_val::Real, max_val::Real)
+    # Clamp value to range
+    clamped = clamp(value, min_val, max_val)
+    
+    # Calculate the number of discrete steps
+    steps = 2^bits - 1
+    
+    # Map from min_val...max_val to 0...steps
+    binary = round(Int, ((clamped - min_val) / (max_val - min_val)) * steps)
+    
+    return binary
 end

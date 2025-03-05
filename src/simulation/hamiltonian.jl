@@ -24,7 +24,7 @@ function heisenberg_hamiltonian(n, J, h)
     
     # Add chemical shift terms
     for i in 1:n
-        H += h[i] * Sz[i]
+        H += h[i] * Sx[i]
     end
     
     return H
@@ -35,7 +35,7 @@ end
 
 Convert a parameter vector θ to coupling matrix J and chemical shifts h.
 """
-function theta_to_hamiltonian_params(θ, n)
+function theta_to_hamiltonian_params(θv, n)
     # Extract chemical shifts
     h = θ[1:n]
     
