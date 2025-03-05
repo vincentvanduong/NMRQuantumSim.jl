@@ -14,7 +14,23 @@ end
     QuantumParameterEncoding
 
 A struct representing the encoding of a subset of NMR Hamiltonian parameters onto qubit registers.
+
+# Fields
+- `j_bits_per_param::Int`: Number of bits per J coupling parameter.
+- `h_bits_per_param::Int`: Number of bits per chemical shift parameter.
+- `j_range::Tuple{Float64, Float64}`: Encoding range for J coupling parameters.
+- `h_range::Tuple{Float64, Float64}`: Encoding range for chemical shift parameters.
+- `N::Int`: Number of qubits in the system.
+- `params::ParameterSubset`: Subset of NMR parameters to encode.
+
+# Example
+```julia
+params = ParameterSubset([(1,2), (2,3)], [1,3])
+qpe = QuantumParameterEncoding(3, params, j_bits_per_param=5, h_bits_per_param=5)
+```
+
 """
+
 struct QuantumParameterEncoding
     j_bits_per_param::Int
     h_bits_per_param::Int
