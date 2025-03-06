@@ -22,7 +22,7 @@ function run_example()
     encoding = QuantumParameterEncoding(
         N_spins, 
         params_to_encode,
-        j_bits_per_param=4, 
+        j_bits_per_param=5, 
         h_bits_per_param=0,
         j_range=(0, 1),
         h_range=(-1, 1)
