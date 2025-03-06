@@ -24,15 +24,17 @@ function run_example()
         params_to_encode,
         j_bits_per_param=5, 
         h_bits_per_param=0,
-        j_range=(0, 1),
+        j_range=(0, 1.2),
         h_range=(-1, 1)
     )
     
     construct_hamiltonian_from_nmr(base_system)
 
     # Simulation timesteps
-    l = 4
-    Δ = 2π / (2^l -1)
+    ω_max = 10   # max fequency in spectrum
+    γ = 0.1 # linewidth
+    Δ = π / ω_max # Bandwidth relation (Nyquist)
+    l = ceil(log2(2π / (Δ * γ))) # resolves linewidth
     dim = 2^N_spins
     params = NMRParameters(N_spins, l, Δ, dim, dim)
 
@@ -42,14 +44,11 @@ function run_example()
     println("Size of C_mnθ: ", size(C))
 
 
-    # Compute spectrum for parameter configuration θ=5
-    frequencies, spectrum = compute_spectrum(A, C, 5)
-
     # Visualize how spectra change across parameter space
     spectral_map = visualise_parameter_space(base_system, encoding, params)
     println("Size of spectral map: ", size(spectral_map))
 
-    fig = plot_spectral_map(spectral_map, params)
+    fig = plot_spectral_map(spectral_map, params, "two_spin_nmr_spectral_function_with_qubits")
 
     return fig
     
@@ -150,7 +149,7 @@ function compute_qft_array(base_system::NMRSystem,
                     if abs(denom) < 1e-10
                         A_mnk = 1.0  # Use the limit value when sin(x)/x approaches 1 as x approaches 0
                     else
-                        prefactor = exp(im * (2.0^l - 1) * Δ * (ω_k - ω_mn) / 2)
+                        prefactor = exp(im * (2^l - 1) * Δ * (ω_k - ω_mn) / 2)
                         A_mnk = 2.0^(-l) * prefactor * num / denom
                     end
                     A[m, n, k+1, θ+1] = A_mnk

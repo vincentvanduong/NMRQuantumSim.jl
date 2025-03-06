@@ -2,7 +2,7 @@ using CairoMakie
 using LaTeXStrings
 using ColorSchemes
 
-function plot_spectral_map(spectrum_2d, parameters)
+function plot_spectral_map(spectrum_2d, parameters, file_name)
 
     # Extract parameters
     #Δ = parameters.Δ
@@ -41,7 +41,7 @@ function plot_spectral_map(spectrum_2d, parameters)
     colorbar = Colorbar(
         fig[1, 2],
         hm,
-        label = L"\mathrm{Spectral Intensity}",
+        label = L"\mathrm{Spectral \; Intensity}",
         labelsize = 16,
         ticklabelsize = 14
     )
@@ -66,8 +66,16 @@ function plot_spectral_map(spectrum_2d, parameters)
     #)
 
     # Save the figure
-    save("parameter_spectral_map.pdf", fig)
-    save("parameter_spectral_map.png", fig, px_per_unit = 2)
+    base_dir = "figs"
+
+    # Create the full paths for different formats
+    eps_path = joinpath(base_dir, file_name * ".eps")
+    pdf_path = joinpath(base_dir, file_name * ".pdf")
+    png_path = joinpath(base_dir, file_name * ".png")
+
+    save(eps_path, fig)
+    save(pdf_path, fig)
+    save(png_path, fig, px_per_unit = 2)
 
     # Display the figure
     fig
