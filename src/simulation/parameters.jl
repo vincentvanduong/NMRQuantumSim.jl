@@ -17,8 +17,8 @@ end
 Create a default parameter set for an NMR system with num_spins nuclear spins.
 """
 function create_default_parameters(num_spins)
-    l = 10  # 10 qubits for phase estimation
-    Δ = 2π / 2000  # Time step
+    l = 6  # 10 qubits for phase estimation
+    Δ = 2π / 1000  # Time step
     dim = 2^num_spins  # Hilbert space dimension
     
     return NMRParameters(
