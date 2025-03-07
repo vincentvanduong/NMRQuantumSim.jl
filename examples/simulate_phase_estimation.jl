@@ -48,7 +48,7 @@ function run_example()
     spectral_map = visualise_parameter_space(base_system, encoding, params)
     println("Size of spectral map: ", size(spectral_map))
 
-    fig = plot_spectral_map(spectral_map, params, "two_spin_nmr_spectral_function_with_qubits")
+    fig = plot_spectral_map(spectral_map, params, "example_simulate_phase_estimation")
 
     return fig
     

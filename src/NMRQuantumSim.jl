@@ -14,9 +14,13 @@ include("simulation/hamiltonian.jl")
 include("simulation/evolution.jl")
 include("simulation/quantum_fourier_transform.jl")
 
+# Lastly include viualisation components
+include("visualisation/posterior_plotting.jl")
+
 # Lastly include IO components
 include("io/serialisation.jl")
 include("io/visualisation.jl")
+include("io/data.jl")
 
 # Export public interface
 export NMRParameters, create_default_parameters
@@ -32,5 +36,6 @@ export initialize_random_system, hamiltonian_parameters, update_from_parameters!
 export binary_to_system, system_to_binary, total_bits, parameter_index_map, real_to_binary, binary_to_real
 export save_system, load_system, calculate_spectrum
 export plot_spectral_map
-
+export save_experiment, load_experiment, list_experiments, run_and_save_experiment
+export plot_1d_density
 end # module

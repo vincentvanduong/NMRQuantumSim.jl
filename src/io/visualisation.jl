@@ -80,3 +80,55 @@ function plot_spectral_map(spectrum_2d, parameters, file_name)
     # Display the figure
     fig
 end
+
+
+"""
+    plot_parameter_posterior(posterior_samples; title="Parameter Posterior", n_bins=30, kwargs...)
+
+Plot the posterior distribution of parameters.
+
+# Arguments
+- `posterior_samples::Dict`: Dictionary with parameter names as keys and sample vectors as values
+- `title::String`: Plot title (default: "Parameter Posterior")
+- `n_bins::Int`: Number of bins for histogram (default: 30)
+- `kwargs...`: Additional keyword arguments for the plot
+
+# Returns
+- A Plots.jl plot object
+"""
+function plot_parameter_posterior(posterior_samples; title="Parameter Posterior", n_bins=30, kwargs...)
+    n_params = length(posterior_samples)
+    
+    if n_params > 9
+        println("Warning: Plotting many parameters. Consider selecting fewer parameters.")
+    end
+    
+    # Calculate layout rows and columns
+    n_cols = min(3, n_params)
+    n_rows = ceil(Int, n_params / n_cols)
+    
+    p = plot(layout=(n_rows, n_cols), size=(300*n_cols, 250*n_rows), title=title)
+    
+    for (i, (param_name, samples)) in enumerate(posterior_samples)
+        histogram!(p[i], samples, 
+            bins=n_bins,
+            normalize=true,
+            xlabel=param_name,
+            ylabel= i % n_cols == 1 ? "Density" : "",
+            title="",
+            label=false,
+            fillalpha=0.7,
+            titlefontsize=10,
+            kwargs...
+        )
+        
+        # Add mean and 95% CI
+        mean_val = mean(samples)
+        ci_low, ci_high = quantile(samples, [0.025, 0.975])
+        
+        vline!(p[i], [mean_val], linestyle=:dash, linewidth=2, color=:black, label="")
+        vspan!(p[i], [ci_low, ci_high], alpha=0.2, color=:blue, label="")
+    end
+    
+    return p
+end
