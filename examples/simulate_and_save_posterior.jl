@@ -8,7 +8,7 @@ function run_posterior(parameters)
     chemical_shift1 = parameters["chemical_shift1"]
     chemical_shift2 = parameters["chemical_shift2"]
 
-    # Create a base system with 4 spins
+    # Create a base system with 2 spins
     base_system = NMRSystem(N_spins)
     set_chemical_shift!(base_system, 1, chemical_shift1) # Fixed shift
     set_chemical_shift!(base_system, 2, chemical_shift2) # Fixed shift
@@ -16,16 +16,16 @@ function run_posterior(parameters)
     # Define parameters to encode (J12 and h4)
     params_to_encode = ParameterSubset(
         [(1, 2)],  # Just encode J12
-        []        # Just encode h4
+        [1]        # Just encode h1
     )
 
     # Create the encoding with 3 bits per parameter
     encoding = QuantumParameterEncoding(
         N_spins, 
         params_to_encode,
-        j_bits_per_param=5, 
-        h_bits_per_param=0,
-        j_range=(0, 1.2),
+        j_bits_per_param=8, 
+        h_bits_per_param=8,
+        j_range=(0, 1),
         h_range=(-1, 1)
     )
     n_configs = 2^total_bits(encoding)
@@ -47,10 +47,15 @@ function run_posterior(parameters)
     println("Size of C_mnθ: ", size(C))
 
     # Make articially generate a spectrum by choosing a value of θ
-    θ_ref = round(Int, n_configs / 2)
+    # Let's test with a specific parameter setting
+    test_system = deepcopy(base_system)
+    set_coupling!(test_system, 1, 2, 0.6)      # Variable coupling
+    set_chemical_shift!(test_system, 1, -0.5)  # Variable shift
+    binary_params = system_to_binary(test_system, encoding)
+    θ_ref = binary_params
     _, A_ref = compute_spectrum(A, C, θ_ref)
 
-    A_ref += 0.1 * randn(size(A_ref))
+    A_ref += 0.05 * randn(size(A_ref))
     
     # Calculate posterior distribution
     posterior = zeros(n_configs)
@@ -85,8 +90,8 @@ function run_posterior(parameters)
     
     # Return results
     return Dict(
-        "parameters" => collect(posterior),
-        "posterior" => collect(range(0, n_configs-1, length=n_configs))
+        "posterior_prob" => collect(posterior),
+        "binary_samples" => collect(range(0, n_configs-1, length=n_configs))
     #    "experimental_spectrum" => noisy_spectrum,
     #    "estimated_spectrum" => estimated_spectrum,
     #    "estimated_parameters" => estimated_params,

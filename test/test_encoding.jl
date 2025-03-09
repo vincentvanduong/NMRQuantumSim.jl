@@ -51,8 +51,8 @@ using NMRQuantumSim
         println("Original J[1,2]: ", test_system.J[1,2], ", Decoded J[1,2]: ", decoded_system.J[1,2])
         println("Original h[4]: ", test_system.h[4], ", Decoded h[4]: ", decoded_system.h[4])
 
-        @test abs(test_system.J[1,2] - decoded_system.J[1,2]) < 1
-        @test abs(test_system.J[4] - decoded_system.h[4]) < 1
+        @test test_system.J[1,2] ≈ decoded_system.J[1,2] atol=0.15
+        @test test_system.h[4] ≈ decoded_system.h[4] atol=0.15
 
         # Verify fixed parameters were preserved
         println("J[1,3] still fixed at: ", decoded_system.J[1,3])

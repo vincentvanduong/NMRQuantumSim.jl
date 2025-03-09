@@ -1,146 +1,81 @@
-using CairoMakie
-using LaTeXStrings
-using ColorSchemes
+using CairoMakie, Statistics
 
-function plot_spectral_map(spectrum_2d, parameters, file_name)
+"""
+    create_corner_plot(samples::Vector{BinaryPosteriorSample}, param_names::Vector{Symbol}; 
+                      fig_size=(900, 900), point_size=5, color_scale=:viridis)
 
-    # Extract parameters
-    #Δ = parameters.Δ
-    #l = parameters.l
+Create a corner plot (pair plot) showing the 2D marginal distributions of parameters.
+Uses raw log probabilities for coloring without smoothing.
 
-    n_freq, n_configs = size(spectrum_2d)
-
-    freq_range = range(0, n_freq-1, length=n_freq)
-    θ_range = range(0, n_configs-1, length=n_configs)
-
-    # Create the figure
-    fig = Figure(size = (900, 600), fontsize = 16)
-
-    # Create a single axis for the heatmap
-    ax = Axis(
-        fig[1, 1],
-        xlabel = L"k",
-        ylabel = L"\theta",
-        title = "Parameter-dependent NMR spectral map",
-        titlesize = 20,
-        xlabelsize = 18,
-        ylabelsize = 18
-    )
-
-    # Create heatmap of the spectral map
-    hm = heatmap!(
-        ax, 
-        θ_range,
-        freq_range,
-        transpose(spectrum_2d)  # Transpose to match the desired orientation
-    )
-
-    hm.colormap = :viridis
-
-    # Add colorbar
-    colorbar = Colorbar(
-        fig[1, 2],
-        hm,
-        label = L"\mathrm{Spectral \; Intensity}",
-        labelsize = 16,
-        ticklabelsize = 14
-    )
-
-    # Add parameter annotations
-    #text!(
-    #    ax, -3.8, 1.4,
-    #    text = L"h_1 = %$h1",
-    #    fontsize = 16
-    #)
-
-    #text!(
-    #    ax, -3.8, 1.3,
-    #    text = L"h_2 = %$h2",
-    #    fontsize = 16
-    #)
-
-    #text!(
-    #    ax, -3.8, 1.2,
-    #    text = L"\gamma = %$γ",
-    #    fontsize = 16
-    #)
-
-    # Save the figure
-    base_dir = "figs"
-
-    # Create the full paths for different formats
-    eps_path = joinpath(base_dir, file_name * ".eps")
-    pdf_path = joinpath(base_dir, file_name * ".pdf")
-    png_path = joinpath(base_dir, file_name * ".png")
-
-    save(eps_path, fig)
-    save(pdf_path, fig)
-    save(png_path, fig, px_per_unit = 2)
-
-    # Display the figure
-    fig
-end
-
-# Define the spectral function
-function plot_1d_density(x, y)
+Returns a Figure object that can be saved or displayed.
+"""
+function create_corner_plot(samples::Vector{BinaryPosteriorSample}, param_names::Vector{Symbol}; 
+                          fig_size=(900, 900), point_size=5, color_scale=:viridis)
+    # Extract parameter values and log probabilities
+    n_params = length(param_names)
+    n_samples = length(samples)
     
-    # Create a figure with appropriate size for publication
-    fig = Figure(size = (900, 600), fontsize = 16)
-
-    # Add a single axis
-    ax = Axis(
-        fig[1, 1],
-        xlabel = L"\theta",
-        ylabel = L"P(\theta|X)",
-        title = "Two-spin NMR posterior",
-        titlesize = 20,
-        xlabelsize = 18,
-        ylabelsize = 18
-    )
-
-    # Select a color palette that works well for scientific publications
-    #colors = ColorSchemes.viridis[range(0.1, 0.9, length=length(θ_values))]
-
-    barplot!(ax, y, x,
-            gap = 0,
-            color = :gray85,
-            strokecolor = :black,
-            strokewidth = 1)
-
-
-    #    line!color = colors[i], 
-        linewidth = 2
-        #label = L"\theta = %$(round(θ, digits=1))")
-    #)
-
-    # Add a legend with correct position syntax
-    #axislegend(ax, position = :rt, nbanks = 2)  # rt means right-top, nbanks creates two columns
-
-    # Add grid lines for better readability
-    ax.xgridvisible = false
-    ax.ygridvisible = false
-
-    # Add annotations about fixed parameters
-    #text!(
-    #    ax, -3.8, 9.0,
-    #    text = L"ω_1 = %$ω1",
-    #    fontsize = 16
-    #)
-
-    #text!(
-    #    ax, -3.8, 8.5,
-    #    text = L"ω_2 = %$ω2",
-    #    fontsize = 16
-    #)
-
-    #text!(
-    #    ax, -3.8, 8.0,
-    #    text = L"\gamma = %$γ",
-    #    fontsize = 16
-    #)
-
-    # Adjust y-axis limits to accommodate all spectra
-    #ylims!(ax, 0, 10)
-
+    # Create a matrix of parameter values
+    param_values = zeros(n_samples, n_params)
+    for i in 1:n_samples
+        for j in 1:n_params
+            param_values[i, j] = samples[i].parameter_values[param_names[j]]
+        end
+    end
+    
+    # Get log probabilities for coloring
+    log_probs = [s.log_probability for s in samples]
+    
+    # Create figure with grid of plots
+    fig = CairoMakie.Figure(size=fig_size)
+    
+    # Find parameter ranges for consistent axes
+    param_ranges = [(minimum(param_values[:, i]), maximum(param_values[:, i])) for i in 1:n_params]
+    
+    # Create corner plot layout
+    for i in 1:n_params
+        for j in 1:n_params
+            # Only create plots for lower triangular part (including diagonal)
+            if j > i
+                continue
+            end
+            
+            # Create axis
+            ax = CairoMakie.Axis(fig[i, j])
+            
+            if i == j
+                # Diagonal: 1D histogram
+                CairoMakie.hist!(ax, param_values[:, i], bins=20)
+                ax.title = string(param_names[i])
+            else
+                # Off-diagonal: 2D scatter plot
+                CairoMakie.scatter!(ax, param_values[:, j], param_values[:, i], 
+                         color=log_probs, colormap=color_scale, 
+                         markersize=point_size)
+                
+                # Set axis limits
+                CairoMakie.xlims!(ax, param_ranges[j])
+                CairoMakie.ylims!(ax, param_ranges[i])
+            end
+            
+            # Only show labels on the edge plots
+            if i < n_params
+                CairoMakie.hidexdecorations!(ax, grid=false, ticks=false)
+            else
+                ax.xlabel = string(param_names[j])
+            end
+            
+            if j > 1
+                CairoMakie.hideydecorations!(ax, grid=false, ticks=false)
+            else
+                ax.ylabel = string(param_names[i])
+            end
+        end
+    end
+    
+    # Add colorbar for log probability
+    CairoMakie.Colorbar(fig[1:n_params, n_params+1], colormap=color_scale, 
+             label="Log Probability", limits=(minimum(log_probs), maximum(log_probs)))
+    
     return fig
 end
