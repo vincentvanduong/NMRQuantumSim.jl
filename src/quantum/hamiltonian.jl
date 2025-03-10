@@ -35,7 +35,7 @@ end
 
 Convert a parameter vector θ to coupling matrix J and chemical shifts h.
 """
-function theta_to_hamiltonian_params(θv, n)
+function theta_to_hamiltonian_params(θ, n)
     # Extract chemical shifts
     h = θ[1:n]
     
@@ -68,50 +68,65 @@ function create_heisenberg_hamiltonian(θ, n)
 end
 
 """
-    construct_hamiltonian(θ, parameters)
+    compute_eigensystem(H::SparseMatrixCSC)
 
-Construct the Hamiltonian for simulation parameters.
+Compute the eigenvalues and eigenvectors of the sparse Hamiltonian.
 """
-function construct_hamiltonian(θ, parameters)
-    # Extract system size
-    num_spins = parameters.num_spins
-    
-    H = create_heisenberg_hamiltonian(θ, num_spins)
-    
-    return H
-end
-
-
-function compute_eigensystem_sparse(H::SparseMatrixCSC)
+function compute_eigensystem(H::SparseMatrixCSC)
     # For large matrices, just compute a subset of eigenvalues/vectors
     # Change nev parameter based on how many eigenvalues you need
-    vals, vecs = eigs(Hermitian(H), nev=min(size(H,1), 10))
+    vals, vecs = eigs(Hermitian(H), nev=min(size(H,1), 100))
     return (vals, vecs)
 end
 
 """
-    compute_eigensystem_dens(H::SparseMatrixCSC)
+    compute_eigensystem(H::AbstractMatrix)
 
-Compute the eigenvalues and eigenvectors of the sparse Hamiltonian.
+Compute the eigenvalues and eigenvectors of a dense Hamiltonian.
 """
-function compute_eigensystem_dense(H::SparseMatrixCSC)
-    H_dense = Matrix(H)  # Convert sparse to dense
-    eigen_decomp = eigen(Hermitian(H_dense))
+function compute_eigensystem(H::AbstractMatrix)
+    eigen_decomp = eigen(Hermitian(H))
     vals, vecs = eigen_decomp.values, eigen_decomp.vectors
     return (vals, vecs)
 end
 
 """
-    compute_eigensystem(θ, parameters)
+    construct_hamiltonian_from_system(system::NMRSystem)
 
-Compute the eigenvalues and eigenvectors of the Hamiltonian.
+Construct the Hamiltonian matrix from an NMR system with couplings and chemical shifts.
 """
-function compute_eigensystem(θ, parameters)
-    # Construct sparse Hamiltonian
-    H = construct_hamiltonian(θ, parameters)
+function construct_hamiltonian_from_system(system::NMRSystem)
+    N = system.N
+    dim = 2^N
+
+    # Create spin operators
+    Sx, Sy, Sz = create_spin_operators(N)
     
-    # Diagonalise a dense Hamiltonian (not using Arpack)
-    vals, vecs = compute_eigensystem_dense(H)
+    # Initialize Hamiltonian matrix
+    H = spzeros(ComplexF64, dim, dim)
     
-    return (vals, vecs)
+    # For each spin pair (i,j), add J_ij * S_i · S_j term
+    for i in 1:N
+        for j in (i+1):N
+            J_ij = system.J[i,j]
+            
+            # Skip if coupling is zero
+            isapprox(J_ij, 0.0, atol=1e-10) && continue
+            
+            H += J_ij * (Sx[i]*Sx[j] + Sy[i]*Sy[j] + Sz[i]*Sz[j])
+        end
+    end
+    
+    # Add chemical shift terms: ∑_i h_i S_i^x
+    for i in 1:N
+        h_i = system.h[i]
+        
+        # Skip if chemical shift is zero
+        isapprox(h_i, 0.0, atol=1e-10) && continue
+                
+        # Add to Hamiltonian
+        H += h_i * Sx[i]
+    end
+    
+    return H
 end

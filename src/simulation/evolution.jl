@@ -24,7 +24,7 @@ function compute_A_mnk(m, n, k, eigenvalues, parameters)
     if abs(denom) < 1e-10
         A_mnk = 1.0  # Use the limit value when sin(x)/x approaches 1 as x approaches 0
     else
-        prefactor = exp(im * (2.0^l - 1) * Δ * (ω_k - ω_mn) / 2)
+        prefactor = exp(im * (2^l - 1) * Δ * (ω_k - ω_mn) / 2)
         A_mnk = 2.0^(-l) * prefactor * num / denom
     end
     
