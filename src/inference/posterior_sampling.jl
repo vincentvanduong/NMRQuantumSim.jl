@@ -156,3 +156,4 @@ function parameter_credible_intervals(samples::Vector{BinaryPosteriorSample},
     
     return intervals
 end
+
