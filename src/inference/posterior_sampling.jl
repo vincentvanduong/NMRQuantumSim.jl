@@ -6,7 +6,7 @@ Structure to hold a single sample from the posterior distribution in both binary
 struct BinaryPosteriorSample
     binary_value::Int
     parameter_values::Dict{Symbol,Float64}
-    log_probability::Float64
+    probability::Float64
 end
 
 """
@@ -39,19 +39,19 @@ function convert_binary_sample_to_parameters(binary_sample::Integer, base_system
 end
 
 """
-    collect_posterior_samples(binary_samples::Vector{Int}, log_probs::Vector{Float64}, 
+    collect_posterior_samples(binary_samples::Vector{Int}, probs::Vector{Float64}, 
                              base_system::NMRSystem, encoding::QuantumParameterEncoding)
 
 Process raw binary samples from quantum circuit into parameter space samples.
 """
-function collect_posterior_samples(binary_samples::Vector{Int}, log_probs::Vector{Float64}, 
+function collect_posterior_samples(binary_samples::Vector{Int}, probs::Vector{Float64}, 
                                   base_system::NMRSystem, encoding::QuantumParameterEncoding)
     samples = Vector{BinaryPosteriorSample}(undef, length(binary_samples))
     
     for i in 1:length(binary_samples)
         binary_value = binary_samples[i]
         params = convert_binary_sample_to_parameters(binary_value, base_system, encoding)
-        samples[i] = BinaryPosteriorSample(binary_value, params, log_probs[i])
+        samples[i] = BinaryPosteriorSample(binary_value, params, probs[i])
     end
     
     return samples
@@ -78,11 +78,9 @@ function estimate_posterior_density(samples::Vector{BinaryPosteriorSample},
         end
     end
     
-    # Calculate weights from log probabilities
-    log_probs = [s.log_probability for s in samples]
-    # Normalize log probabilities to avoid numerical issues
-    log_probs .-= maximum(log_probs)
-    probs = exp.(log_probs)
+    # Calculate weights from probabilities
+    probs = [s.probability for s in samples]
+    # Normalize probabilities to avoid numerical issues
     weights = probs ./ sum(probs)
     
     # Construct kernel density estimate
@@ -122,7 +120,7 @@ Find the maximum a posteriori estimate from the samples.
 """
 function find_map_estimate(samples::Vector{BinaryPosteriorSample})
     # Find the sample with the highest posterior probability
-    max_idx = argmax([s.log_probability for s in samples])
+    max_idx = argmax([s.probability for s in samples])
     return samples[max_idx]
 end
 

@@ -80,13 +80,15 @@ function compute_qft_array(base_system::NMRSystem,
                 for k in 0:(n_freq-1)
                     # Frequency from phase estimation
                     ω_k = 2π * k / (Δ * 2^l)
+                    #TODO Handle case where the limit value approaches zero.
+                    phase_diff = (ω_k - ω_mn)
                     
                     # Compute A_mnk coefficient using closed-form equation instead of summation
                     num = sin(Δ * 2^l * (ω_k - ω_mn) / 2)
                     denom = sin(Δ * (ω_k - ω_mn) / 2)
 
                     # Handle the case where denom is very close to zero
-                    if abs(denom) < 1e-10
+                    if abs(phase_diff) < 1e-10
                         A_mnk = 1.0  # Use the limit value when sin(x)/x approaches 1 as x approaches 0
                     else
                         prefactor = exp(im * (2^l - 1) * Δ * (ω_k - ω_mn) / 2)
@@ -182,5 +184,3 @@ function visualise_parameter_space(base_system::NMRSystem,
     
     return spectral_map
 end
-
-

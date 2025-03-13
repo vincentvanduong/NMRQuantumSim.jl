@@ -21,7 +21,7 @@ using NMRQuantumSim
     encoding = QuantumParameterEncoding(
         N_spins, # Number of spins
         params_to_encode,
-        j_bits_per_param=10, 
+        j_bits_per_param=8, 
         h_bits_per_param=0,
         j_range=(0, 1.0),
         h_range=(0, 1.0)
@@ -29,7 +29,7 @@ using NMRQuantumSim
 
     # Calculate total qubits needed
     n_qubits = total_bits(encoding)
-    @test n_qubits == 10  # Should be 10 (10 for J12)
+    @test n_qubits == 8  # Should be 10 (10 for J12)
 
     # Get parameter-to-qubit mapping
     param_map = parameter_index_map(encoding)
@@ -56,21 +56,21 @@ using NMRQuantumSim
     l = ceil(Int64, log2(2π / (Δ * γ))) # resolves linewidth
     dim = 2^N_spins
     n_freq = 2^l
-    params = NMRParameters(N_spins, l, Δ, dim, dim)
+    parameters = NMRParameters(N_spins, l, Δ, dim, dim)
 
     # Compute the target spectrum
-    A, C = compute_qft_array(base_system, encoding, params)
+    A, C = compute_qft_array(base_system, encoding, parameters)
     target_spectrum = compute_spectrum(A, C, true_parameters)
     #target_spectrum += 0.05 * abs.(randn(size(target_spectrum))) # Add a bit of noise
 
-    posterior, samples = estimate_posterior(target_spectrum, base_system, encoding, params)
-    
-    # Find maximum posterior probability
+    samples = estimate_posterior(target_spectrum, base_system, encoding, parameters)
     best_config = find_map_estimate(samples)
+
+    println(samples)
     
     # Check if recovered parameters are close to the test values
-    println("Original J[1,2]: ", true_system.J[1,2], ", Best J[1,2]: ", best_config.system.J[1,2])
-    @test isapprox(true_system.J[1,2], best_config.system.J[1,2], atol=0.15)
-
+    println("Original J[1,2]: ", true_system.J[1,2], ", Best J[1,2]: ", best_config.parameter_values[:J_1_2])
+    @test isapprox(true_system.J[1,2], best_config.parameter_values[:J_1_2], atol=0.1)
+    
 
 end

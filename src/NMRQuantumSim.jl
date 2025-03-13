@@ -19,7 +19,6 @@ include("simulation/phase_estimation.jl")
 # Then include calssical inference components
 include("inference/posterior_sampling.jl")
 include("inference/quantum_posterior.jl")
-include("inference/parameter_sample.jl")
 
 # Then include io components
 include("io/serialisation.jl")
@@ -39,8 +38,7 @@ export heisenberg_hamiltonian, compute_eigensystem, construct_hamiltonian_from_s
 export compute_qft_array, compute_spectrum, visualise_parameter_space
 
 export compute_likelihood, estimate_posterior
-export ParameterSample, binary_list_to_parameter_samples, find_map_estimate
 
-export BinaryPosteriorSample, convert_binary_sample_to_parameters, collect_posterior_samples
+export BinaryPosteriorSample, convert_binary_sample_to_parameters, collect_posterior_samples, find_map_estimate, estimate_posterior_density
 
 end # module
