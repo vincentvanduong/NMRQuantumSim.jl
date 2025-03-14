@@ -15,7 +15,8 @@ using NMRQuantumSim
     spectral_fn = create_spectral_function(system, γ)
 
     # Evaluate at a single frequency
-    A_value = spectral_fn(0.5)
+    ω = 0.5
+    A_value = spectral_fn(ω)
     @test A_value > 0
-    println("Evaluate A(ω) at {0.5}:", A_value)
+    println("Evaluate A(ω) at ω=$ω: ", A_value)
 end
